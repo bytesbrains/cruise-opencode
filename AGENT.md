@@ -56,14 +56,16 @@ Sister clients to match for tone and key-handling:
 | `src/provider.ts` | Registers `cruise` + live `GET /v1/models` fill |
 | `src/models.ts` | Projects Cruise `x-cruise` rows → OpenCode model map |
 | `src/fetch-models.ts` | Authenticated models list fetch |
-| `src/base-url.ts` | HTTPS `*.bytesbrains.net` allowlist |
+| `src/base-url.ts` | HTTPS prod/demo host allowlist |
 | `src/resolve-api-key.ts` | Env + OpenCode `auth.json` key resolution |
 | `src/errors.ts` | `error.code` refusal helpers |
 | `src/auth.ts` | `/connect` API-key method for provider `cruise` |
+| `scripts/rehearse-demo.mjs` | Live demo wire check (models + stream + tools) |
 | `test/` | Vitest unit tests (mocked `/v1/models`) |
 | `.env.example` | `CRUISE_API_KEY` / `CRUISE_BASE_URL` placeholders |
 | `dist/` | `tsc` build output (published; not committed) |
 | `README.md` | Product pitch, install, demo rehearsal |
+| `CONTRIBUTING.md` | Setup + how to re-run demo rehearsal |
 | `SECURITY.md` | Private vulnerability disclosure |
 | `AGENT.md` | This file — agent conventions |
 | `LICENSE` | BytesBrains proprietary client license |
