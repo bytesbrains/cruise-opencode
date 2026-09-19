@@ -30,6 +30,42 @@ describe("applyCruiseProvider", () => {
     expect(config.provider?.[PROVIDER_ID]?.models).toEqual({});
   });
 
+  it("fetches live models when an apiKey option is passed (auth-store path)", async () => {
+    const fetchImpl = vi.fn(async () =>
+      Response.json({
+        object: "list",
+        data: [
+          {
+            id: "bb/agentic-coding",
+            object: "model",
+            "x-cruise": {
+              lane: true,
+              job: "agentic-coding",
+              modality: "chat",
+              max_context: 128_000,
+              max_output: 8_192,
+              pricing: {
+                input_micros_per_mtok: 100_000,
+                output_micros_per_mtok: 200_000,
+              },
+            },
+          },
+        ],
+      }),
+    );
+
+    const config: Config = {};
+    const result = await applyCruiseProvider(config, {
+      env: {},
+      apiKey: "cru_demo_testplaceholder00000000000000000000",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    expect(result.fetched).toBe(true);
+    expect(result.modelCount).toBe(1);
+    expect(fetchImpl).toHaveBeenCalled();
+  });
+
   it("fetches live models when CRUISE_API_KEY is set", async () => {
     const fetchImpl = vi.fn(async () =>
       Response.json({

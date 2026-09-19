@@ -21,4 +21,11 @@ describe("resolveAllowedCruiseBaseUrl", () => {
     expect(resolveAllowedCruiseBaseUrl("https://evil.example/v1")).toBe(CRUISE_BASE_URL);
     expect(resolveAllowedCruiseBaseUrl("not a url")).toBe(CRUISE_BASE_URL);
   });
+
+  it("rejects other bytesbrains.net subdomains (explicit allowlist only)", () => {
+    expect(resolveAllowedCruiseBaseUrl("https://attacker.bytesbrains.net/v1")).toBe(
+      CRUISE_BASE_URL,
+    );
+    expect(resolveAllowedCruiseBaseUrl("https://bytesbrains.net/v1")).toBe(CRUISE_BASE_URL);
+  });
 });

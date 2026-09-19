@@ -57,6 +57,7 @@ Sister clients to match for tone and key-handling:
 | `src/models.ts` | Projects Cruise `x-cruise` rows → OpenCode model map |
 | `src/fetch-models.ts` | Authenticated models list fetch |
 | `src/base-url.ts` | HTTPS `*.bytesbrains.net` allowlist |
+| `src/resolve-api-key.ts` | Env + OpenCode `auth.json` key resolution |
 | `src/errors.ts` | `error.code` refusal helpers |
 | `src/auth.ts` | `/connect` API-key method for provider `cruise` |
 | `test/` | Vitest unit tests (mocked `/v1/models`) |

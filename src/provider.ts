@@ -15,6 +15,8 @@ type ProviderEntry = NonNullable<Config["provider"]>[string];
 export type ApplyCruiseProviderOptions = {
   /** Env-like map; defaults to `process.env`. */
   env?: Record<string, string | undefined>;
+  /** Resolved Cruise key (env or `/connect` auth store). */
+  apiKey?: string;
   fetchImpl?: typeof fetch;
   /** When false, skip live discovery (register provider shell only). */
   fetchModels?: boolean;
@@ -50,7 +52,7 @@ export async function applyCruiseProvider(
         : CRUISE_BASE_URL;
   const baseURL = resolveAllowedCruiseBaseUrl(configuredBase);
 
-  const apiKeyFromEnv = env[CRUISE_API_KEY_ENV]?.trim() ?? "";
+  const apiKey = (options.apiKey ?? env[CRUISE_API_KEY_ENV] ?? "").trim();
 
   config.provider ??= {};
   config.provider[PROVIDER_ID] = {
@@ -70,13 +72,13 @@ export async function applyCruiseProvider(
     models: { ...existingModels },
   };
 
-  if (options.fetchModels === false || !apiKeyFromEnv) {
+  if (options.fetchModels === false || !apiKey) {
     return { fetched: false, modelCount: Object.keys(existingModels).length };
   }
 
   const result = await fetchCruiseModels({
     baseUrl: baseURL,
-    apiKey: apiKeyFromEnv,
+    apiKey,
     fetchImpl: options.fetchImpl,
   });
 
