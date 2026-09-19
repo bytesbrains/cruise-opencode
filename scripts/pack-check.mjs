@@ -16,17 +16,17 @@ import {
   statSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { join } from "node:path";
+import {
+  ALLOWED_TOP,
+  CRUISE_KEY,
+  FORBIDDEN_NAME,
+  assertSafeTarballName,
+  gitleaksRequired,
+  topLevelSegment,
+} from "./pack-check-helpers.mjs";
 
 const ROOT = process.cwd();
-
-/** Must match package.json `files` (+ package.json always included by npm). */
-const ALLOWED_TOP = new Set(["package.json", "README.md", "LICENSE", "dist"]);
-
-const FORBIDDEN_NAME = /(?:^|\/)(?:\.env|\.env\..*|credentials\.json|.*\.(?:pem|key))$/i;
-
-/** Align with .gitleaks.toml cruise-key (prefix + 40 base62 chars). */
-const CRUISE_KEY = /\bcru_(?:live|demo|test|svc)_[A-Za-z0-9]{40}\b/;
 
 function listFiles(dir, prefix = "") {
   const out = [];
@@ -38,19 +38,6 @@ function listFiles(dir, prefix = "") {
     else out.push(rel);
   }
   return out;
-}
-
-function assertSafeTarballName(name) {
-  const base = basename(name);
-  if (base !== name || name.includes("..") || name.includes("/") || name.includes("\\")) {
-    console.error(`pack:check: refusing unsafe tarball name: ${name}`);
-    process.exit(1);
-  }
-  if (!/^[\w.-]+\.tgz$/.test(base)) {
-    console.error(`pack:check: unexpected tarball basename: ${base}`);
-    process.exit(1);
-  }
-  return base;
 }
 
 function isMostlyText(buf) {
@@ -85,11 +72,16 @@ function runGitleaksOnExtract(pkgRoot) {
       console.error("pack:check: gitleaks found secrets in the packed artifact");
       process.exit(1);
     }
-    if (err && typeof err === "object" && "status" in err && err.status === 127) {
-      console.warn("pack:check: gitleaks not on PATH — regex scan only");
-      return;
-    }
-    if (err && typeof err === "object" && "code" in err && err.code === "ENOENT") {
+    const missing =
+      (err && typeof err === "object" && "status" in err && err.status === 127) ||
+      (err && typeof err === "object" && "code" in err && err.code === "ENOENT");
+    if (missing) {
+      if (gitleaksRequired()) {
+        console.error(
+          "pack:check: gitleaks not on PATH — failing closed in CI (install gitleaks before pack:check)",
+        );
+        process.exit(1);
+      }
       console.warn("pack:check: gitleaks not on PATH — regex scan only");
       return;
     }
@@ -111,10 +103,18 @@ if (!packOut) {
   console.error("pack:check: npm pack produced no tarball name");
   process.exit(1);
 }
-const tarball = assertSafeTarballName(packOut);
+
+let tarball;
+try {
+  tarball = assertSafeTarballName(packOut);
+} catch (err) {
+  console.error(err instanceof Error ? err.message : String(err));
+  process.exit(1);
+}
 
 const extractDir = mkdtempSync(join(tmpdir(), "cruise-opencode-pack-"));
 try {
+  // Absolute path so a leading '-' in the basename cannot be parsed as a tar option.
   execFileSync("tar", ["-xzf", join(ROOT, tarball), "-C", extractDir], {
     stdio: "inherit",
   });
@@ -126,7 +126,7 @@ try {
   const files = listFiles(pkgRoot);
 
   for (const rel of files) {
-    const top = rel.split("/")[0] ?? rel;
+    const top = topLevelSegment(rel);
     if (!ALLOWED_TOP.has(top)) {
       console.error(`pack:check: unexpected path in tarball: ${rel}`);
       process.exit(1);

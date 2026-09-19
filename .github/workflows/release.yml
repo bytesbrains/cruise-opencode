@@ -7,8 +7,9 @@
 #   4. This workflow builds, packs, scans the tarball, then publishes to npm
 #      via OIDC trusted publishing. The tag must point at a commit on main.
 #
-# workflow_dispatch defaults to dry_run=true (pack/validate only). Set dry_run
-# to false on a v* tag ref to publish without pushing a new tag.
+# workflow_dispatch defaults to dry_run=true (pack/validate only). Publishing
+# still requires github.ref to be refs/tags/v* — dry_run=false on a branch never
+# publishes. Set dry_run=false only when re-running against an existing v* tag.
 #
 # One-time npm setup: Trusted Publisher on npmjs for this package —
 #   Owner: bytesbrains  Repo: cruise-opencode  Workflow: release.yml
@@ -57,8 +58,12 @@ jobs:
 
       - name: Install gitleaks CLI
         run: |
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz \
-            | tar -xz -C /usr/local/bin gitleaks
+          set -euo pipefail
+          curl -sSL -o /tmp/gitleaks_8.24.3_linux_x64.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz
+          echo "9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c  /tmp/gitleaks_8.24.3_linux_x64.tar.gz" \
+            | sha256sum -c -
+          tar -xzf /tmp/gitleaks_8.24.3_linux_x64.tar.gz -C /usr/local/bin gitleaks
           gitleaks version
 
       - name: Install
