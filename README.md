@@ -46,6 +46,10 @@ already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
 [cruise-cursor-plugin](https://github.com/bytesbrains/cruise-cursor-plugin),
 [cruise-claude-plugin](https://github.com/bytesbrains/cruise-claude-plugin).
 
+> [!NOTE]
+> This is an independent community plugin maintained by BytesBrains. It is not built by or
+> affiliated with the OpenCode team.
+
 ---
 
 ## Install
