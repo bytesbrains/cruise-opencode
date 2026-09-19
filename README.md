@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://bytesbrains.com/cruise"><img src="https://img.shields.io/badge/Product-bytesbrains.com%2Fcruise-111111" alt="Product" /></a>
+  <a href="https://www.npmjs.com/package/@bytesbrains/opencode-cruise"><img src="https://img.shields.io/npm/v/@bytesbrains/opencode-cruise?label=npm" alt="npm" /></a>
   <a href="https://opencode.ai/docs/providers/"><img src="https://img.shields.io/badge/Host-OpenCode-555" alt="OpenCode docs" /></a>
   <a href="https://github.com/bytesbrains/cruise-opencode"><img src="https://img.shields.io/badge/Source-bytesbrains%2Fcruise--opencode-111111" alt="Source" /></a>
 </p>
@@ -34,9 +35,9 @@ the base URL you configure.
 | **Production API** | `https://cruise.bytesbrains.net/v1` |
 | **Demo API** | `https://cruise-demo.bytesbrains.net/v1` |
 
-**Status:** demo-verified (`@bytesbrains/opencode-cruise` `0.0.0`) — not published yet
-([#4](https://github.com/bytesbrains/cruise-opencode/issues/4)). See
-[Verified against demo](#verified-against-demo). Track work in
+**Status:** demo-verified; npm package `@bytesbrains/opencode-cruise` `0.1.0` — publish by
+tagging `v0.1.0` after Trusted Publisher is configured (see
+[CONTRIBUTING.md](./CONTRIBUTING.md)). Track work in
 [GitHub issues](https://github.com/bytesbrains/cruise-opencode/issues). Sister clients that
 already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
 [cruise-hermes](https://github.com/bytesbrains/cruise-hermes),
@@ -48,7 +49,8 @@ already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
 
 ## Install
 
-Once published, add the plugin and set a Cruise key. The plugin registers provider `cruise`
+Add the plugin and set a Cruise key. Once `v0.1.0` is tagged, OpenCode installs from npm via
+the `plugin` array. The plugin registers provider `cruise`
 (`npm: @ai-sdk/openai-compatible`, base URL with `/v1`) and fills models from live
 `GET /v1/models` for that key — never a frozen catalogue.
 
@@ -71,8 +73,7 @@ export CRUISE_API_KEY=cru_demo_…   # or cru_live_…
 Or copy [`.env.example`](./.env.example) to `.env` for local rehearsal. You can also run
 `/connect` in OpenCode and choose **Cruise API Key** (same provider id: `cruise`).
 
-Until npm publish ([#4](https://github.com/bytesbrains/cruise-opencode/issues/4)), link or
-point OpenCode at this repo’s built package, or use a manual custom provider:
+Manual custom provider (no plugin) if you only need two strings + pasted model ids:
 
 ```jsonc
 // manual fallback (bucket A — two strings + models you paste from GET /v1/models)
@@ -118,7 +119,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for what the script checks.
 
 ### Verified against demo
 
-**2026-09-19 UTC** — `@bytesbrains/opencode-cruise` `0.0.0` (built locally), env:
+**2026-09-19 UTC** — `@bytesbrains/opencode-cruise` `0.1.0` (built locally), env:
 
 ```text
 CRUISE_API_KEY=cru_demo_…          # never committed

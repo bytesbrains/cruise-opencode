@@ -61,19 +61,21 @@ Sister clients to match for tone and key-handling:
 | `src/errors.ts` | `error.code` refusal helpers |
 | `src/auth.ts` | `/connect` API-key method for provider `cruise` |
 | `scripts/rehearse-demo.mjs` | Live demo wire check (models + stream + tools) |
+| `scripts/pack-check.mjs` | Pack tarball + refuse secrets / unexpected paths |
 | `test/` | Vitest unit tests (mocked `/v1/models`) |
 | `.env.example` | `CRUISE_API_KEY` / `CRUISE_BASE_URL` placeholders |
 | `dist/` | `tsc` build output (published; not committed) |
+| `CHANGELOG.md` | Released versions (bump with `package.json`) |
 | `README.md` | Product pitch, install, demo rehearsal |
-| `CONTRIBUTING.md` | Setup + how to re-run demo rehearsal |
+| `CONTRIBUTING.md` | Setup, demo rehearsal, how to cut a release |
 | `SECURITY.md` | Private vulnerability disclosure |
 | `AGENT.md` | This file — agent conventions |
 | `LICENSE` | BytesBrains proprietary client license |
+| `.gitleaks.toml` | Cruise-key rule for pack/CI secret scans |
 | `.github/workflows/ci.yml` | Typecheck / build / test on PRs |
-| `.github/workflows/` | Optional publish-on-`v*` tag (→ #4) |
+| `.github/workflows/release.yml` | Publish on `v*` tag (OIDC Trusted Publisher) |
 
 ## Open work
 
 See [GitHub issues](https://github.com/bytesbrains/cruise-opencode/issues). Pick an open issue,
-open a PR against `main`, and keep the README status line honest until the package is
-published and demo-verified.
+open a PR against `main`. Releases are tag-only — see [CONTRIBUTING.md](./CONTRIBUTING.md).

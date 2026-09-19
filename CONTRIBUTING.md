@@ -48,3 +48,25 @@ the script prints.
 
 Optional OpenCode UI check (after the package is linked or published): set the same env,
 load `@bytesbrains/opencode-cruise`, and confirm `/models` lists the projected Cruise ids.
+
+## Cutting a release
+
+Publishing is a deliberate tag — a merge to `main` is never a release.
+
+1. Bump `package.json` `version` and add a `CHANGELOG.md` entry in a PR; merge to `main`.
+2. One-time (org owner): on [npmjs.com](https://www.npmjs.com) for
+   `@bytesbrains/opencode-cruise`, add a Trusted Publisher —
+   GitHub org `bytesbrains`, repo `cruise-opencode`, workflow `release.yml`.
+3. Tag the merged main commit and push the tag:
+
+```sh
+git checkout main && git pull
+git tag v0.1.0          # must match package.json version
+git push origin v0.1.0
+```
+
+4. Watch the `release` workflow: it typechecks, builds, tests, runs `npm run pack:check`,
+   then `npm publish` via OIDC (optional break-glass: repo secret `NPM_TOKEN`).
+5. Confirm OpenCode auto-installs from `"plugin": ["@bytesbrains/opencode-cruise"]`.
+
+Dry-run without publishing: Actions → `release` → Run workflow (`dry_run` defaults to true).
