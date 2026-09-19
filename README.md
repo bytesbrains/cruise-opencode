@@ -34,10 +34,11 @@ the base URL you configure.
 | **Production API** | `https://cruise.bytesbrains.net/v1` |
 | **Demo API** | `https://cruise-demo.bytesbrains.net/v1` |
 
-**Status:** package scaffold builds locally (`@bytesbrains/opencode-cruise` `0.0.0`) — not
-published yet; provider registration is [#2](https://github.com/bytesbrains/cruise-opencode/issues/2).
-Track work in [GitHub issues](https://github.com/bytesbrains/cruise-opencode/issues). Sister
-clients that already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
+**Status:** provider registration works locally (`@bytesbrains/opencode-cruise` `0.0.0`) —
+not published yet ([#4](https://github.com/bytesbrains/cruise-opencode/issues/4)); demo
+rehearsal is [#3](https://github.com/bytesbrains/cruise-opencode/issues/3). Track work in
+[GitHub issues](https://github.com/bytesbrains/cruise-opencode/issues). Sister clients that
+already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
 [cruise-hermes](https://github.com/bytesbrains/cruise-hermes),
 [openclaw-cruise](https://github.com/bytesbrains/openclaw-cruise),
 [cruise-cursor-plugin](https://github.com/bytesbrains/cruise-cursor-plugin),
@@ -45,17 +46,19 @@ clients that already ship: [cruise-vscode](https://github.com/bytesbrains/cruise
 
 ---
 
-## Install (after publish)
+## Install
 
-OpenCode already speaks OpenAI-compatible providers. The plugin will make the Cruise wiring
-one package install plus a key in the environment — model ids from `GET /v1/models`, never a
-frozen catalogue.
+Once published, add the plugin and set a Cruise key. The plugin registers provider `cruise`
+(`npm: @ai-sdk/openai-compatible`, base URL with `/v1`) and fills models from live
+`GET /v1/models` for that key — never a frozen catalogue.
 
 ```jsonc
 // opencode.json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@bytesbrains/opencode-cruise"]
+  "plugin": ["@bytesbrains/opencode-cruise"],
+  // optional — prefer a lane once models are discovered:
+  // "model": "cruise/bb/agentic-coding"
 }
 ```
 
@@ -65,9 +68,34 @@ export CRUISE_API_KEY=cru_demo_…   # or cru_live_…
 # export CRUISE_BASE_URL=https://cruise.bytesbrains.net/v1
 ```
 
-Until npm publish ([#4](https://github.com/bytesbrains/cruise-opencode/issues/4)) and provider
-wiring ([#2](https://github.com/bytesbrains/cruise-opencode/issues/2)), a manual custom provider
-is still valid OpenCode config. Prefer rehearsing on the demo host first.
+Or copy [`.env.example`](./.env.example) to `.env` for local rehearsal. You can also run
+`/connect` in OpenCode and choose **Cruise API Key** (same provider id: `cruise`).
+
+Until npm publish ([#4](https://github.com/bytesbrains/cruise-opencode/issues/4)), link or
+point OpenCode at this repo’s built package, or use a manual custom provider:
+
+```jsonc
+// manual fallback (bucket A — two strings + models you paste from GET /v1/models)
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "cruise": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "BytesBrains Cruise",
+      "env": ["CRUISE_API_KEY"],
+      "options": {
+        "baseURL": "https://cruise-demo.bytesbrains.net/v1",
+        "apiKey": "{env:CRUISE_API_KEY}"
+      },
+      "models": {
+        "bb/agentic-coding": { "name": "Agentic Coding (lane)" }
+      }
+    }
+  }
+}
+```
+
+Prefer rehearsing on the demo host first.
 
 ### Develop from this repo
 
@@ -78,6 +106,11 @@ npm run build
 npm test
 ```
 
+### Refusals
+
+Cruise declines with `error.code` (`budget_exhausted`, `wallet_exhausted`,
+`measurement_stale`, …). Branch on that code — not HTTP status alone. The plugin logs
+known refusal codes on `session.error` when the body is present.
 ---
 
 ## Conventions
