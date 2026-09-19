@@ -11,6 +11,7 @@ import { applyCruiseProvider } from "./provider.js";
 import { isCruiseRefusal, readCruiseErrorCode } from "./errors.js";
 import { resolveCruiseApiKey } from "./resolve-api-key.js";
 import { PROVIDER_ID } from "./constants.js";
+import { cruiseTools } from "./tools.js";
 
 export {
   PLUGIN_ID,
@@ -38,6 +39,9 @@ export {
   type CruiseRefusalCode,
 } from "./errors.js";
 export { cruiseAuthHook } from "./auth.js";
+export { resolveCruiseMcpUrl } from "./mcp-url.js";
+export { callCruiseMcpTool } from "./mcp-client.js";
+export { applyCruiseMcp, cruiseTools, createCruiseTools } from "./tools.js";
 
 async function resolveStateDir(client: PluginInput["client"]): Promise<string | undefined> {
   try {
@@ -123,6 +127,7 @@ async function handleSessionError(
 export const CruisePlugin: Plugin = async ({ client }) => {
   return {
     auth: cruiseAuthHook,
+    tool: cruiseTools,
     config: async (config) => {
       await handleConfigHook(client, config);
     },

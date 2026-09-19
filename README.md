@@ -98,6 +98,33 @@ Manual custom provider (no plugin) if you only need two strings + pasted model i
 
 Prefer rehearsing on the demo host first.
 
+### Budget tools (Cruise MCP)
+
+The plugin registers read-only tools that call Cruise’s remote MCP with the same `cru_` key:
+
+| Tool | Answers |
+| --- | --- |
+| `cruise_list_models` | models/lanes this key can reach (optional `kind`, `modality`) |
+| `cruise_get_budget` | project budget period, caps, `action`, and wallet |
+| `cruise_get_spend` | month’s charges by model or lane |
+| `cruise_setup` | check key + probe `get_budget`; with consent, merge `mcp.cruise` into `opencode.json` |
+
+Production MCP: `https://cruise.bytesbrains.net/mcp` · Demo:
+`https://cruise-demo.bytesbrains.net/mcp`. The key stays in `CRUISE_API_KEY` (or `/connect`) —
+never in config. Optional host-managed MCP (same server) after `cruise_setup` with
+`write_config=true`:
+
+```jsonc
+"mcp": {
+  "cruise": {
+    "type": "remote",
+    "url": "https://cruise.bytesbrains.net/mcp",
+    "oauth": false,
+    "headers": { "Authorization": "Bearer {env:CRUISE_API_KEY}" }
+  }
+}
+```
+
 ### Develop from this repo
 
 ```sh
@@ -132,6 +159,7 @@ CRUISE_BASE_URL=https://cruise-demo.bytesbrains.net/v1
 | Live catalogue | plugin projection **63** ids from `GET /v1/models`, incl. `bb/agentic-coding` |
 | Streamed chat | `POST /v1/chat/completions` SSE completed (`bb/agentic-coding` → `x-cruise-model: anthropic/claude-fable-5-1`, budget ok) |
 | Tools | tool-bearing chat request accepted (demo fabricates the body) |
+| Cruise MCP | `get_budget` + `list_models` over `/mcp` (see latest `rehearse:demo` run) |
 
 Demo holds no provider credential — answers may be fabricated; the point is the wire.
 

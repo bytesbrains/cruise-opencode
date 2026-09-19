@@ -12,6 +12,7 @@
  *   1. GET /v1/models → plugin projection surfaces chat / lane ids
  *   2. Streamed POST /v1/chat/completions completes; prints Cruise response headers
  *   3. Tool-bearing chat request is accepted (demo may fabricate the body)
+ *   4. Cruise MCP `get_budget` (+ optional `list_models`) answers over `/mcp`
  *
  * Exit 0 on success. Never prints the API key.
  */
@@ -28,6 +29,8 @@ import {
   resolveAllowedCruiseBaseUrl,
   readCruiseErrorCode,
   isCruiseRefusal,
+  resolveCruiseMcpUrl,
+  callCruiseMcpTool,
 } from "../dist/index.js";
 import {
   classifyToolsHttpFailure,
@@ -311,6 +314,30 @@ async function main() {
       console.log(`  cruise headers: ${JSON.stringify(tools.headers)}`);
     }
   }
+  console.log("");
+
+  // 4. Cruise MCP (read-only budget tools)
+  const mcpUrl = resolveCruiseMcpUrl(baseUrl);
+  console.log(`  mcp URL : ${mcpUrl}`);
+  const budget = await callCruiseMcpTool({
+    mcpUrl,
+    apiKey,
+    name: "get_budget",
+  });
+  if (!budget.ok) {
+    fail(`Cruise MCP get_budget failed: ${budget.reason}`);
+  }
+  ok("Cruise MCP get_budget answered");
+  const lanes = await callCruiseMcpTool({
+    mcpUrl,
+    apiKey,
+    name: "list_models",
+    arguments: { kind: "lanes", modality: "chat" },
+  });
+  if (!lanes.ok) {
+    fail(`Cruise MCP list_models failed: ${lanes.reason}`);
+  }
+  ok("Cruise MCP list_models (lanes/chat) answered");
 
   console.log("");
   ok("demo rehearsal passed");

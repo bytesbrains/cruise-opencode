@@ -42,12 +42,14 @@ The script:
 3. Sends a tool-bearing chat request (soft-skips only if the demo rejects tools with
    400/422 *and* no known Cruise `error.code` refusal; `budget_exhausted` and friends
    still fail the rehearsal).
+4. Calls Cruise MCP `get_budget` and `list_models` on the same host’s `/mcp` path.
 
 After a green run, update the README **Verified against demo** section with the **UTC** date
 the script prints.
 
 Optional OpenCode UI check (after the package is linked or published): set the same env,
-load `@bytesbrains/opencode-cruise`, and confirm `/models` lists the projected Cruise ids.
+load `@bytesbrains/opencode-cruise`, confirm `/models` lists the projected Cruise ids, and
+try `cruise_get_budget` / `cruise_setup` (setup asks before writing `opencode.json`).
 
 ## Cutting a release
 
