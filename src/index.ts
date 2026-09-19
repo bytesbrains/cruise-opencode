@@ -1,33 +1,135 @@
 /**
  * BytesBrains Cruise — OpenCode plugin entry.
  *
- * Provider registration and live `GET /v1/models` fetch land in a follow-up
- * (#2). This scaffold exports a loadable OpenCode `Plugin` so the package can
- * be referenced from `opencode.json` once published.
+ * Registers Cruise as an OpenAI-compatible provider (`@ai-sdk/openai-compatible`)
+ * and fills models from live `GET /v1/models` when a Cruise key is available
+ * (env or OpenCode `/connect` auth store).
  */
-import type { Plugin } from "@opencode-ai/plugin";
+import type { Config, Plugin, PluginInput } from "@opencode-ai/plugin";
+import { cruiseAuthHook } from "./auth.js";
+import { applyCruiseProvider } from "./provider.js";
+import { isCruiseRefusal, readCruiseErrorCode } from "./errors.js";
+import { resolveCruiseApiKey } from "./resolve-api-key.js";
+import { PROVIDER_ID } from "./constants.js";
 
-/** Stable id for diagnostics and future provider registration. */
-export const PLUGIN_ID = "bytesbrains-cruise";
+export {
+  PLUGIN_ID,
+  PROVIDER_ID,
+  CRUISE_BASE_URL,
+  CRUISE_DEMO_BASE_URL,
+  CRUISE_API_KEY_ENV,
+  CRUISE_BASE_URL_ENV,
+  CRUISE_DEFAULT_MODEL_ID,
+  OPENAI_COMPATIBLE_NPM,
+} from "./constants.js";
+export { resolveAllowedCruiseBaseUrl } from "./base-url.js";
+export {
+  microsToDollarsPerMtok,
+  projectCruiseLiveModels,
+  type OpenCodeModelConfig,
+} from "./models.js";
+export { fetchCruiseModels } from "./fetch-models.js";
+export { applyCruiseProvider } from "./provider.js";
+export { resolveCruiseApiKey } from "./resolve-api-key.js";
+export {
+  CRUISE_REFUSAL_CODES,
+  isCruiseRefusal,
+  readCruiseErrorCode,
+  type CruiseRefusalCode,
+} from "./errors.js";
+export { cruiseAuthHook } from "./auth.js";
 
-/** Production Cruise OpenAI-compatible base URL (includes `/v1`). */
-export const CRUISE_BASE_URL = "https://cruise.bytesbrains.net/v1";
+async function resolveStateDir(client: PluginInput["client"]): Promise<string | undefined> {
+  try {
+    const result = await client.path.get();
+    const data = "data" in result ? result.data : undefined;
+    if (data && typeof data === "object" && "state" in data) {
+      const state = (data as { state?: unknown }).state;
+      return typeof state === "string" && state.trim() ? state.trim() : undefined;
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
 
-/** Demo Cruise base URL for rehearsal with `cru_demo_` keys. */
-export const CRUISE_DEMO_BASE_URL = "https://cruise-demo.bytesbrains.net/v1";
+async function logWarn(client: PluginInput["client"], message: string): Promise<void> {
+  await client.app
+    .log({
+      body: {
+        service: PROVIDER_ID,
+        level: "warn",
+        message,
+      },
+    })
+    .catch(() => {
+      /* logging is best-effort during config */
+    });
+}
 
-/** Environment variable OpenCode / users should set for the Cruise key. */
-export const CRUISE_API_KEY_ENV = "CRUISE_API_KEY";
+function cruisePayloadFromSessionError(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object" || !("data" in raw)) {
+    return raw;
+  }
+  const data = (raw as { data?: { responseBody?: unknown } }).data;
+  if (typeof data?.responseBody !== "string") {
+    return raw;
+  }
+  try {
+    return JSON.parse(data.responseBody);
+  } catch {
+    return data.responseBody;
+  }
+}
 
-/** Optional override for the Cruise base URL. */
-export const CRUISE_BASE_URL_ENV = "CRUISE_BASE_URL";
+async function handleConfigHook(
+  client: PluginInput["client"],
+  config: Config,
+): Promise<void> {
+  const stateDir = await resolveStateDir(client);
+  const apiKey = await resolveCruiseApiKey({ stateDir });
+  const result = await applyCruiseProvider(config, { apiKey });
+  if (result.fetchError) {
+    await logWarn(client, result.fetchError);
+  }
+}
 
-/**
- * OpenCode plugin. Currently a no-op hooks object — wiring Cruise as a
- * provider is intentionally deferred to issue #2.
- */
-export const CruisePlugin: Plugin = async () => {
-  return {};
+async function handleSessionError(
+  client: PluginInput["client"],
+  event: { type: string; properties?: Record<string, unknown> },
+): Promise<void> {
+  if (event.type !== "session.error") {
+    return;
+  }
+  const payload = cruisePayloadFromSessionError(event.properties?.error);
+  if (!isCruiseRefusal(payload)) {
+    return;
+  }
+  const code = readCruiseErrorCode(payload);
+  await client.app
+    .log({
+      body: {
+        service: PROVIDER_ID,
+        level: "error",
+        message: `Cruise refused the request (${code}) — branch on error.code, not HTTP status alone`,
+        extra: { code },
+      },
+    })
+    .catch(() => {
+      /* best-effort */
+    });
+}
+
+export const CruisePlugin: Plugin = async ({ client }) => {
+  return {
+    auth: cruiseAuthHook,
+    config: async (config) => {
+      await handleConfigHook(client, config);
+    },
+    event: async ({ event }) => {
+      await handleSessionError(client, event as { type: string; properties?: Record<string, unknown> });
+    },
+  };
 };
 
 export default CruisePlugin;

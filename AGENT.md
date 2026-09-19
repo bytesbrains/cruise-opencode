@@ -52,8 +52,16 @@ Sister clients to match for tone and key-handling:
 | Path | Role |
 | --- | --- |
 | `package.json` | npm package `@bytesbrains/opencode-cruise` |
-| `src/index.ts` | OpenCode `Plugin` entry (provider / model fetch → #2) |
-| `test/` | Vitest smoke tests |
+| `src/index.ts` | OpenCode `Plugin` entry (`config` + `auth` hooks) |
+| `src/provider.ts` | Registers `cruise` + live `GET /v1/models` fill |
+| `src/models.ts` | Projects Cruise `x-cruise` rows → OpenCode model map |
+| `src/fetch-models.ts` | Authenticated models list fetch |
+| `src/base-url.ts` | HTTPS `*.bytesbrains.net` allowlist |
+| `src/resolve-api-key.ts` | Env + OpenCode `auth.json` key resolution |
+| `src/errors.ts` | `error.code` refusal helpers |
+| `src/auth.ts` | `/connect` API-key method for provider `cruise` |
+| `test/` | Vitest unit tests (mocked `/v1/models`) |
+| `.env.example` | `CRUISE_API_KEY` / `CRUISE_BASE_URL` placeholders |
 | `dist/` | `tsc` build output (published; not committed) |
 | `README.md` | Product pitch, install, demo rehearsal |
 | `SECURITY.md` | Private vulnerability disclosure |
