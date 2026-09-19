@@ -34,9 +34,10 @@ the base URL you configure.
 | **Production API** | `https://cruise.bytesbrains.net/v1` |
 | **Demo API** | `https://cruise-demo.bytesbrains.net/v1` |
 
-**Status:** scaffold only — no published package yet. Track work in
-[GitHub issues](https://github.com/bytesbrains/cruise-opencode/issues). Sister clients that
-already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
+**Status:** package scaffold builds locally (`@bytesbrains/opencode-cruise` `0.0.0`) — not
+published yet; provider registration is [#2](https://github.com/bytesbrains/cruise-opencode/issues/2).
+Track work in [GitHub issues](https://github.com/bytesbrains/cruise-opencode/issues). Sister
+clients that already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
 [cruise-hermes](https://github.com/bytesbrains/cruise-hermes),
 [openclaw-cruise](https://github.com/bytesbrains/openclaw-cruise),
 [cruise-cursor-plugin](https://github.com/bytesbrains/cruise-cursor-plugin),
@@ -44,14 +45,14 @@ already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
 
 ---
 
-## Intended install (after publish)
+## Install (after publish)
 
-OpenCode already speaks OpenAI-compatible providers. The plugin should make the Cruise wiring
+OpenCode already speaks OpenAI-compatible providers. The plugin will make the Cruise wiring
 one package install plus a key in the environment — model ids from `GET /v1/models`, never a
 frozen catalogue.
 
 ```jsonc
-// opencode.json — shape to land in #1 / #2; package name TBD in those issues
+// opencode.json
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": ["@bytesbrains/opencode-cruise"]
@@ -64,8 +65,18 @@ export CRUISE_API_KEY=cru_demo_…   # or cru_live_…
 # export CRUISE_BASE_URL=https://cruise.bytesbrains.net/v1
 ```
 
-Until the package exists, a manual custom provider is still valid OpenCode config (bucket A —
-two strings). Prefer rehearsing on the demo host first.
+Until npm publish ([#4](https://github.com/bytesbrains/cruise-opencode/issues/4)) and provider
+wiring ([#2](https://github.com/bytesbrains/cruise-opencode/issues/2)), a manual custom provider
+is still valid OpenCode config. Prefer rehearsing on the demo host first.
+
+### Develop from this repo
+
+```sh
+npm install
+npm run typecheck
+npm run build
+npm test
+```
 
 ---
 

@@ -1,0 +1,58 @@
+{
+  "name": "@bytesbrains/opencode-cruise",
+  "version": "0.0.0",
+  "description": "BytesBrains Cruise plugin for OpenCode — budgets, lanes, and OpenAI-compatible routing via the Cruise gateway.",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "homepage": "https://bytesbrains.com/cruise",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bytesbrains/cruise-opencode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bytesbrains/cruise-opencode/issues"
+  },
+  "keywords": [
+    "opencode",
+    "cruise",
+    "bytesbrains",
+    "llm",
+    "openai-compatible",
+    "byok",
+    "plugin"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepack": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.4.0"
+  },
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.18.31",
+    "@types/node": "^24.5.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
