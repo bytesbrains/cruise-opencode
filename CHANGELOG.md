@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 — 2026-09-20
+
+- Update the README for the published npm package and add direct package and installation links.
+
 ## 0.1.0 — 2026-09-20
 
 First npm release of `@bytesbrains/opencode-cruise`.
