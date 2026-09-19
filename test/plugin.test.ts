@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CruisePlugin, {
   CRUISE_API_KEY_ENV,
   CRUISE_BASE_URL,
@@ -15,6 +15,9 @@ function fakeClient() {
   return {
     app: {
       log: vi.fn(async () => ({})),
+    },
+    path: {
+      get: vi.fn(async () => ({ data: { state: "/tmp/opencode-state-test" } })),
     },
   };
 }
@@ -37,6 +40,21 @@ describe("package exports", () => {
 });
 
 describe("CruisePlugin", () => {
+  const previousApiKey = process.env[CRUISE_API_KEY_ENV];
+  const previousBaseUrl = process.env[CRUISE_BASE_URL_ENV];
+
+  beforeEach(() => {
+    delete process.env[CRUISE_API_KEY_ENV];
+    delete process.env[CRUISE_BASE_URL_ENV];
+  });
+
+  afterEach(() => {
+    if (previousApiKey === undefined) delete process.env[CRUISE_API_KEY_ENV];
+    else process.env[CRUISE_API_KEY_ENV] = previousApiKey;
+    if (previousBaseUrl === undefined) delete process.env[CRUISE_BASE_URL_ENV];
+    else process.env[CRUISE_BASE_URL_ENV] = previousBaseUrl;
+  });
+
   it("returns auth + config hooks and registers the Cruise provider", async () => {
     const hooks = await CruisePlugin({ client: fakeClient() } as never);
     expect(hooks.auth?.provider).toBe("cruise");

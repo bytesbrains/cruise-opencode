@@ -34,9 +34,9 @@ the base URL you configure.
 | **Production API** | `https://cruise.bytesbrains.net/v1` |
 | **Demo API** | `https://cruise-demo.bytesbrains.net/v1` |
 
-**Status:** provider registration works locally (`@bytesbrains/opencode-cruise` `0.0.0`) —
-not published yet ([#4](https://github.com/bytesbrains/cruise-opencode/issues/4)); demo
-rehearsal is [#3](https://github.com/bytesbrains/cruise-opencode/issues/3). Track work in
+**Status:** demo-verified (`@bytesbrains/opencode-cruise` `0.0.0`) — not published yet
+([#4](https://github.com/bytesbrains/cruise-opencode/issues/4)). See
+[Verified against demo](#verified-against-demo). Track work in
 [GitHub issues](https://github.com/bytesbrains/cruise-opencode/issues). Sister clients that
 already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
 [cruise-hermes](https://github.com/bytesbrains/cruise-hermes),
@@ -105,6 +105,34 @@ npm run typecheck
 npm run build
 npm test
 ```
+
+### Demo rehearsal
+
+```sh
+cp .env.example .env   # set CRUISE_API_KEY=cru_demo_… — never commit .env
+npm run build
+npm run rehearse:demo
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for what the script checks.
+
+### Verified against demo
+
+**2026-09-19 UTC** — `@bytesbrains/opencode-cruise` `0.0.0` (built locally), env:
+
+```text
+CRUISE_API_KEY=cru_demo_…          # never committed
+CRUISE_BASE_URL=https://cruise-demo.bytesbrains.net/v1
+```
+
+| Check | Result |
+| --- | --- |
+| `npm run rehearse:demo` | passed |
+| Live catalogue | plugin projection **63** ids from `GET /v1/models`, incl. `bb/agentic-coding` |
+| Streamed chat | `POST /v1/chat/completions` SSE completed (`bb/agentic-coding` → `x-cruise-model: anthropic/claude-fable-5-1`, budget ok) |
+| Tools | tool-bearing chat request accepted (demo fabricates the body) |
+
+Demo holds no provider credential — answers may be fabricated; the point is the wire.
 
 ### Refusals
 
