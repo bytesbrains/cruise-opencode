@@ -35,8 +35,9 @@ the base URL you configure.
 | **Production API** | `https://cruise.bytesbrains.net/v1` |
 | **Demo API** | `https://cruise-demo.bytesbrains.net/v1` |
 
-**Status:** demo-verified; npm package `@bytesbrains/opencode-cruise` `0.1.0` — publish by
-tagging `v0.1.0` after Trusted Publisher is configured (see
+**Status:** published on npm as
+[`@bytesbrains/opencode-cruise`](https://www.npmjs.com/package/@bytesbrains/opencode-cruise).
+Releases are published from GitHub Actions through npm Trusted Publishing (see
 [CONTRIBUTING.md](./CONTRIBUTING.md)). Track work in
 [GitHub issues](https://github.com/bytesbrains/cruise-opencode/issues). Sister clients that
 already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
@@ -49,8 +50,15 @@ already ship: [cruise-vscode](https://github.com/bytesbrains/cruise-vscode),
 
 ## Install
 
-Add the plugin and set a Cruise key. Once `v0.1.0` is tagged, OpenCode installs from npm via
-the `plugin` array. The plugin registers provider `cruise`
+Install the published package from
+[npm](https://www.npmjs.com/package/@bytesbrains/opencode-cruise):
+
+```sh
+npm install @bytesbrains/opencode-cruise
+```
+
+Or add it directly to OpenCode's `plugin` array. OpenCode installs it from npm and the plugin
+registers provider `cruise`
 (`npm: @ai-sdk/openai-compatible`, base URL with `/v1`) and fills models from live
 `GET /v1/models` for that key — never a frozen catalogue.
 
