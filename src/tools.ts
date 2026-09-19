@@ -252,7 +252,13 @@ function buildCruiseTools(ctx: CruiseToolsContext = {}) {
           parsed.$schema = "https://opencode.ai/config.json";
         }
 
-        await write(configPath, `${JSON.stringify(parsed, null, 2)}\n`);
+        try {
+          await write(configPath, `${JSON.stringify(parsed, null, 2)}\n`);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          lines.push(`Could not write mcp.cruise into ${configPath}: ${message}`);
+          return lines.join("\n");
+        }
         lines.push(`Wrote mcp.cruise into ${configPath} (key still only in ${CRUISE_API_KEY_ENV}).`);
         return lines.join("\n");
       },

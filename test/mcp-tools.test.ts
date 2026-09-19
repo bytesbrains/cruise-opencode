@@ -9,6 +9,8 @@ import {
 } from "../src/constants.js";
 import type { Config } from "@opencode-ai/plugin";
 
+const MOCK_API_KEY = "mock-test-api-key";
+
 describe("resolveCruiseMcpUrl", () => {
   it("maps allowed /v1 bases to /mcp on the same host", () => {
     expect(resolveCruiseMcpUrl(CRUISE_BASE_URL)).toBe("https://cruise.bytesbrains.net/mcp");
@@ -38,7 +40,7 @@ describe("callCruiseMcpTool", () => {
     );
     const result = await callCruiseMcpTool({
       mcpUrl: "https://cruise-demo.bytesbrains.net/mcp",
-      apiKey: "cru_demo_test",
+      apiKey: MOCK_API_KEY,
       name: "get_budget",
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
@@ -58,7 +60,7 @@ describe("callCruiseMcpTool", () => {
   it("surfaces MCP tool errors", async () => {
     const result = await callCruiseMcpTool({
       mcpUrl: "https://cruise-demo.bytesbrains.net/mcp",
-      apiKey: "cru_demo_test",
+      apiKey: MOCK_API_KEY,
       name: "get_budget",
       fetchImpl: (async () =>
         Response.json({
@@ -97,7 +99,7 @@ describe("createCruiseTools", () => {
   it("cruise_get_budget calls MCP and returns the tool text", async () => {
     const tools = createCruiseTools({
       env: {
-        [CRUISE_API_KEY_ENV]: "cru_demo_test",
+        [CRUISE_API_KEY_ENV]: MOCK_API_KEY,
         CRUISE_BASE_URL: CRUISE_DEMO_BASE_URL,
       },
       fetchImpl: (async () =>
@@ -128,7 +130,7 @@ describe("createCruiseTools", () => {
     const ask = vi.fn(async () => undefined);
     const tools = createCruiseTools({
       env: {
-        [CRUISE_API_KEY_ENV]: "cru_demo_test",
+        [CRUISE_API_KEY_ENV]: MOCK_API_KEY,
         CRUISE_BASE_URL: CRUISE_DEMO_BASE_URL,
       },
       fetchImpl: (async () =>
@@ -185,6 +187,48 @@ describe("createCruiseTools", () => {
     const saved = JSON.parse(files.get("/tmp/proj/opencode.json")!);
     expect(saved.mcp.cruise.type).toBe("remote");
     expect(saved.mcp.cruise.headers.Authorization).toContain("{env:CRUISE_API_KEY}");
-    expect(JSON.stringify(saved)).not.toMatch(/cru_demo_test/);
+    expect(JSON.stringify(saved)).not.toContain(MOCK_API_KEY);
+  });
+
+  it("cruise_setup reports write failures without throwing", async () => {
+    const ask = vi.fn(async () => undefined);
+    const tools = createCruiseTools({
+      env: {
+        [CRUISE_API_KEY_ENV]: MOCK_API_KEY,
+        CRUISE_BASE_URL: CRUISE_DEMO_BASE_URL,
+      },
+      fetchImpl: (async () =>
+        Response.json({
+          jsonrpc: "2.0",
+          id: 1,
+          result: {
+            content: [{ type: "text", text: "budget ok" }],
+          },
+        })) as unknown as typeof fetch,
+      readConfigFile: async () => {
+        throw new Error("ENOENT");
+      },
+      writeConfigFile: async () => {
+        throw new Error("EACCES");
+      },
+    });
+
+    const out = await tools.cruise_setup.execute(
+      { write_config: true },
+      {
+        sessionID: "s",
+        messageID: "m",
+        agent: "build",
+        directory: "/tmp/proj",
+        worktree: "/tmp/proj",
+        abort: new AbortController().signal,
+        metadata: () => undefined,
+        ask,
+      },
+    );
+
+    expect(ask).toHaveBeenCalledOnce();
+    expect(String(out)).toContain("Could not write mcp.cruise into /tmp/proj/opencode.json");
+    expect(String(out)).toContain("EACCES");
   });
 });
