@@ -39,7 +39,9 @@ The script:
 
 1. Calls `GET /v1/models` and projects ids the way the plugin does (chat rows with `x-cruise`).
 2. Runs a streamed `POST /v1/chat/completions` and prints Cruise response headers when present.
-3. Sends a tool-bearing chat request (soft-skips if the demo rejects tools with 400/422).
+3. Sends a tool-bearing chat request (soft-skips only if the demo rejects tools with
+   400/422 *and* no known Cruise `error.code` refusal; `budget_exhausted` and friends
+   still fail the rehearsal).
 
 After a green run, update the README **Verified against demo** section with the **UTC** date
 the script prints.

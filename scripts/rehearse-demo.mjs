@@ -17,7 +17,7 @@
  */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   CRUISE_API_KEY_ENV,
   CRUISE_BASE_URL_ENV,
@@ -27,10 +27,17 @@ import {
   projectCruiseLiveModels,
   resolveAllowedCruiseBaseUrl,
   readCruiseErrorCode,
+  isCruiseRefusal,
 } from "../dist/index.js";
+import {
+  classifyToolsHttpFailure,
+  flushSseBuffer,
+  sseIncompleteReason,
+} from "./rehearse-helpers.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
+const refusal = { readCruiseErrorCode, isCruiseRefusal };
 
 function loadDotEnv() {
   const path = resolve(root, ".env");
@@ -132,34 +139,38 @@ async function streamedChat({ baseUrl, apiKey, model }) {
   let sawDone = false;
   let content = "";
 
+  const consumeLine = (line) => {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("data:")) return;
+    const data = trimmed.slice(5).trim();
+    if (data === "[DONE]") {
+      sawDone = true;
+      return;
+    }
+    sawData = true;
+    try {
+      const chunk = JSON.parse(data);
+      const delta = chunk?.choices?.[0]?.delta?.content;
+      if (typeof delta === "string") content += delta;
+    } catch {
+      /* ignore non-JSON SSE comments */
+    }
+  };
+
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n");
     buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith("data:")) continue;
-      const data = trimmed.slice(5).trim();
-      if (data === "[DONE]") {
-        sawDone = true;
-        continue;
-      }
-      sawData = true;
-      try {
-        const chunk = JSON.parse(data);
-        const delta = chunk?.choices?.[0]?.delta?.content;
-        if (typeof delta === "string") content += delta;
-      } catch {
-        /* ignore non-JSON SSE comments */
-      }
-    }
+    for (const line of lines) consumeLine(line);
   }
+  // Flush decoder + any final data: line that lacked a trailing newline.
+  buffer += decoder.decode();
+  flushSseBuffer(buffer, consumeLine);
 
-  if (!sawData && !sawDone) {
-    fail("streamed chat produced no SSE data frames");
-  }
+  const incomplete = sseIncompleteReason({ sawData, sawDone });
+  if (incomplete) fail(incomplete);
 
   return { headers, content, sawDone };
 }
@@ -199,20 +210,18 @@ async function toolsChat({ baseUrl, apiKey, model }) {
   const headers = cruiseHeaders(response);
   const body = await readErrorBody(response);
   if (!response.ok) {
-    const code = readCruiseErrorCode(body);
-    // Demo may reject tools — surface clearly but treat HTTP 4xx with a Cruise
-    // refusal code as a hard fail; unsupported tools is a soft skip.
-    if (response.status === 400 || response.status === 422) {
+    // Soft-skip only when the demo rejects tools without a known Cruise
+    // refusal code; budget_exhausted / measurement_stale / … must fail.
+    const verdict = classifyToolsHttpFailure(response.status, body, refusal);
+    if (verdict.kind === "soft_skip") {
       return {
         accepted: false,
         skipped: true,
-        reason: `tools request returned HTTP ${response.status}${code ? ` (${code})` : ""}`,
+        reason: verdict.reason,
         headers,
       };
     }
-    fail(
-      `tools chat HTTP ${response.status}${code ? ` (${code})` : ""} — ${JSON.stringify(body ?? {})}`,
-    );
+    fail(verdict.message);
   }
 
   return { accepted: true, skipped: false, headers, body };
@@ -310,6 +319,11 @@ async function main() {
   );
 }
 
-main().catch((error) => {
-  fail(error instanceof Error ? error.message : String(error));
-});
+const isDirectRun =
+  Boolean(process.argv[1]) &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+if (isDirectRun) {
+  main().catch((error) => {
+    fail(error instanceof Error ? error.message : String(error));
+  });
+}
