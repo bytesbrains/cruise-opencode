@@ -1,6 +1,6 @@
 {
   "name": "@bytesbrains/opencode-cruise",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "BytesBrains Cruise plugin for OpenCode — budgets, lanes, and OpenAI-compatible routing via the Cruise gateway.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
@@ -39,6 +39,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "rehearse:demo": "node scripts/rehearse-demo.mjs",
+    "pack:check": "node scripts/pack-check.mjs",
     "prepack": "npm run build"
   },
   "publishConfig": {
