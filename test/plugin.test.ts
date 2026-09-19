@@ -55,10 +55,14 @@ describe("CruisePlugin", () => {
     else process.env[CRUISE_BASE_URL_ENV] = previousBaseUrl;
   });
 
-  it("returns auth + config hooks and registers the Cruise provider", async () => {
+  it("returns auth + config + tool hooks and registers the Cruise provider", async () => {
     const hooks = await CruisePlugin({ client: fakeClient() } as never);
     expect(hooks.auth?.provider).toBe("cruise");
     expect(typeof hooks.config).toBe("function");
+    expect(hooks.tool?.cruise_get_budget).toBeDefined();
+    expect(hooks.tool?.cruise_list_models).toBeDefined();
+    expect(hooks.tool?.cruise_get_spend).toBeDefined();
+    expect(hooks.tool?.cruise_setup).toBeDefined();
 
     const config: Config = {};
     await hooks.config?.(config);
