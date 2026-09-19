@@ -47,17 +47,20 @@ Sister clients to match for tone and key-handling:
   a release that fires on every merge separates the artifact from whoever made it.
 - Open changes as pull requests against `main`. Do not force-push or delete `main`.
 
-## Layout (target — land in issues)
+## Layout
 
 | Path | Role |
 | --- | --- |
-| `package.json` | npm package `@bytesbrains/opencode-cruise` (name confirm in #1) |
-| `src/` | Plugin entry + provider registration / model fetch |
+| `package.json` | npm package `@bytesbrains/opencode-cruise` |
+| `src/index.ts` | OpenCode `Plugin` entry (provider / model fetch → #2) |
+| `test/` | Vitest smoke tests |
+| `dist/` | `tsc` build output (published; not committed) |
 | `README.md` | Product pitch, install, demo rehearsal |
 | `SECURITY.md` | Private vulnerability disclosure |
 | `AGENT.md` | This file — agent conventions |
 | `LICENSE` | BytesBrains proprietary client license |
-| `.github/workflows/` | CI + optional publish-on-`v*` tag |
+| `.github/workflows/ci.yml` | Typecheck / build / test on PRs |
+| `.github/workflows/` | Optional publish-on-`v*` tag (→ #4) |
 
 ## Open work
 
